@@ -27,6 +27,20 @@ class ReconcileMedicationResponse(BaseModel):
     reasoning: str
     recommended_actions: List[str]
     clinical_safety_check: str
+    selected_source_system: str
+    review_flags: List[str]
+    source_rankings: List["MedicationSourceRanking"]
+
+
+class MedicationSourceRanking(BaseModel):
+    system: str
+    medication: str
+    normalized_medication: str
+    score: int
+    rank: int
+    reliability: str
+    freshness_evidence: str
+    review_flags: List[str]
 
 
 class Demographics(BaseModel):
@@ -66,3 +80,4 @@ class DataQualityResponse(BaseModel):
     overall_score: int
     breakdown: DataQualityBreakdown
     issues_detected: List[IssueDetected]
+    summary: str
