@@ -4,3 +4,4 @@ pydantic
 openai
 pytest
 python-dotenv
+pyhealth

@@ -6,6 +6,7 @@ The LLM layer is intentionally narrow:
 
 - generate concise human-readable reasoning for reconciliation decisions
 - summarize structured data-quality findings
+- explain why one source outranked another in a stored case workflow
 - never replace deterministic scoring or safety flags
 
 ## Design Principles
@@ -30,7 +31,22 @@ The LLM layer is intentionally narrow:
 - System prompt:
   Explain why the selected source is most likely correct and mention safety concerns without overstating certainty.
 - User payload:
-  Patient context, selected source, review flags, and ranked source metadata.
+  Patient context, selected source, review flags, ranked source metadata, recent lab context, and confidence breakdown.
+
+### Example Reconciliation Prompt Snippet
+
+```text
+Patient conditions: Type 2 diabetes, Hypertension, Chronic kidney disease
+Recent labs: eGFR 45, creatinine 1.6
+Selected source: Primary Care - Metformin 500mg BID
+Other sources:
+- Hospital EHR - Metformin 1000mg BID
+- Pharmacy - Metformin 1000mg daily
+Review flags: renal dosing review
+
+Write a concise explanation of why the selected source is most credible.
+Mention safety implications without inventing new clinical facts.
+```
 
 ## Data Quality Prompt Shape
 
