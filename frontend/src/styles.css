@@ -1767,3 +1767,90 @@ textarea:focus {
 .scanner-result p {
   color: #9eb2cf;
 }
+
+.panel--new-patient {
+  background: linear-gradient(180deg, rgba(12, 22, 38, 0.98), rgba(8, 16, 29, 0.98)) !important;
+  border-color: rgba(124, 199, 255, 0.18) !important;
+  color: #e6eefc !important;
+}
+
+.panel--new-patient h2,
+.panel--new-patient h3,
+.panel--new-patient strong {
+  color: #e6eefc !important;
+}
+
+.panel--new-patient .eyebrow {
+  color: #8fb0da !important;
+}
+
+.panel--new-patient .workspace-card__copy,
+.panel--new-patient .empty-copy,
+.panel--new-patient .scanner-result p,
+.panel--new-patient .scanner-panel__overlay,
+.panel--new-patient .scanner-candidate p,
+.panel--new-patient .scanner-history__item p {
+  color: #9eb2cf !important;
+}
+
+.panel--new-patient .intake-field span {
+  color: #a9bfde !important;
+}
+
+.panel--new-patient .intake-grid {
+  padding: 4px 0 2px;
+}
+
+.panel--new-patient .intake-field input {
+  background: rgba(6, 14, 27, 0.96) !important;
+  border-color: rgba(124, 199, 255, 0.16) !important;
+  color: #e6eefc !important;
+}
+
+.panel--new-patient .button-row {
+  margin-top: 14px;
+}
+
+.panel--new-patient .scanner-panel {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(124, 199, 255, 0.12) !important;
+  border-radius: 18px;
+}
+
+.panel--new-patient .workspace-card--muted {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+.panel--new-patient .scanner-panel__controls {
+  gap: 14px;
+}
+
+.panel--new-patient .scanner-result,
+.panel--new-patient .scanner-candidate,
+.panel--new-patient .scanner-history__item,
+.panel--new-patient .demo-control-panel__hint {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(124, 199, 255, 0.14) !important;
+}
+
+.panel--new-patient .button {
+  color: #07111f !important;
+}
+
+.panel--new-patient .button--secondary {
+  color: #dce8ff !important;
+}
+
+.demo-control-panel__intake .panel,
+.demo-control-panel__intake .panel.panel--new-patient {
+  background: linear-gradient(180deg, rgba(12, 22, 38, 0.98), rgba(8, 16, 29, 0.98)) !important;
+  border-color: rgba(124, 199, 255, 0.18) !important;
+}
+
+.demo-control-panel__intake .panel * {
+  color: inherit;
+}

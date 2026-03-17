@@ -127,7 +127,7 @@ export function NewPatientPanel({ onCreateCase }: NewPatientPanelProps) {
   }
 
   return (
-    <section className="panel">
+    <section className="panel panel--new-patient">
       <div className="panel__header panel__header--stacked">
         <div>
           <p className="eyebrow">Add New Patient</p>
