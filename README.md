@@ -1,53 +1,82 @@
-# Clinical Data Reconciliation Engine (Mini Version)
+# Clinical Data Reconciliation Engine
 
-A focused full-stack take-home project for reconciling conflicting medication records and validating chart data quality with AI-assisted reviewer explanations.
+AI-assisted medication reconciliation and chart quality review for a clinician-facing take-home assessment.
 
-This submission is intentionally scoped to the assignment:
-- one medication reconciliation workflow
-- one data quality validation workflow
-- two primary public API endpoints
-- a clean clinician-friendly React UI
-- deterministic logic with an LLM explanation layer
+This project is designed to feel like a strong internship submission:
+- focused scope
+- clean full-stack architecture
+- explainable AI-assisted reasoning
+- clinician-friendly UI
+- easy local setup and demo flow
 
-## Project Overview
-
-The application helps a reviewer answer four questions quickly:
-- What does the system think the most likely medication record is?
-- Why did it choose that record?
+The product helps a reviewer answer four questions quickly:
+- What medication record is most likely correct?
+- Why did the system choose it?
 - Is the recommendation clinically safe enough to review or approve?
-- Is the underlying patient record complete and plausible?
+- Is the underlying chart complete, current, and plausible?
 
-The product is framed as AI-assisted decision support, not autonomous medical decision-making.
+The system is framed as decision support, not autonomous medical decision-making.
 
-## Stack
+## Why This Project Is Strong
 
-- Frontend: React + TypeScript
-- Backend: FastAPI + Python
-- Validation: Pydantic schemas
-- Testing: Vitest and Pytest
-- AI: OpenAI API with deterministic fallback
-- Caching: in-memory LLM response cache
+- Hybrid reasoning: deterministic scoring plus an LLM explanation layer
+- Human in the loop: the reviewer remains the final decision-maker
+- Clear explainability: confidence, reasoning, source ranking, and safety framing are visible in the UI
+- Practical quality checks: implausible vitals, stale charts, and incomplete documentation are flagged clearly
+- Demo-ready UX: seeded scenarios, reviewer workflow, and scanner-assisted intake make the app easy to present
 
-## Architecture Summary
+## Core Features
 
-```mermaid
-flowchart LR
-  UI["React Frontend"] --> API["FastAPI Backend"]
-  API --> REC["Reconciliation Engine"]
-  API --> DQ["Data Quality Engine"]
-  REC --> CONF["Confidence Scoring"]
-  REC --> SAFE["Clinical Safety Checks"]
-  REC --> LLM["LLM Explanation Layer"]
-  DQ --> LLM
-```
+### Medication Reconciliation
 
-Key decision:
-- deterministic rules remain the source of truth
-- the LLM converts structured findings into concise reviewer-facing reasoning
+- Compare conflicting medication records across multiple sources
+- Generate a reconciled medication recommendation
+- Show a confidence score with interpretable factors
+- Surface concise clinical reasoning
+- Show recommended follow-up actions
+- Display a clinical safety check status
+- Highlight rule hits and source trust ranking
+- Present a source-by-source medication comparison table
+- Show a clinical diff of what changed between sources
+- Support approve, reject, and manual review decisions
+
+### Data Quality Validation
+
+- Score the chart across:
+  - completeness
+  - accuracy
+  - timeliness
+  - clinical plausibility
+- Flag issues such as:
+  - missing allergy documentation
+  - implausible vital signs
+  - stale chart updates
+  - inconsistent or incomplete data
+- Separate blocking issues from advisory findings
+- Provide remediation guidance for reviewers
+
+### Reviewer Experience
+
+- Dominant clinical focus panel for the primary issue
+- Patient summary and recent lab context
+- AI decision inspector with confidence and reasoning
+- Risk heatmap for high / medium / low concerns
+- Longitudinal source timeline
+- Seeded demo scenarios for presentation flow
+
+### Intake and Scanner Workflow
+
+- Create a new review case
+- Camera-assisted medication capture
+- Barcode / code scanning
+- Uploaded image support
+- OCR-assisted label capture fallback
+- Manual medication code or label entry
+- Ranked medication candidates before apply
 
 ## Public API
 
-The assignment-facing public API is centered on these two endpoints:
+The assignment-facing public API is centered on these two endpoints.
 
 ### `POST /api/reconcile/medication`
 
@@ -102,7 +131,7 @@ Example response:
 {
   "reconciled_medication": "Metformin 500mg BID",
   "confidence_score": 0.88,
-  "reasoning": "Primary care record is the most recent clinician-authored source and better fits the CKD context.",
+  "reasoning": "Primary care is the most recent clinician-authored source and better fits the chronic kidney disease context.",
   "recommended_actions": [
     "Confirm the active dose with the dispensing pharmacy.",
     "Review renal function before final approval."
@@ -172,16 +201,68 @@ Example response:
 }
 ```
 
-## Local Setup
+## Architecture
 
-From the repository root:
+```mermaid
+flowchart LR
+  UI["React Frontend"] --> API["FastAPI Backend"]
+  API --> REC["Reconciliation Engine"]
+  API --> DQ["Data Quality Engine"]
+  REC --> CONF["Confidence Scoring"]
+  REC --> SAFE["Clinical Safety Checks"]
+  REC --> LLM["LLM Explanation Layer"]
+  DQ --> LLM
+```
+
+Key design decision:
+- deterministic rules remain the source of truth
+- the LLM turns structured findings into concise reviewer-facing reasoning
+
+## Tech Stack
+
+- Frontend: React + TypeScript
+- Backend: FastAPI + Python
+- Validation: Pydantic schemas
+- Testing: Vitest and Pytest
+- AI: OpenAI API with deterministic fallback
+- Caching: in-memory LLM response cache
+
+## Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/sdg5-hub/clinical-data-reconciliation-engine.git
+cd clinical-data-reconciliation-engine
+```
+
+### 2. Set up the backend
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+```
+
+### 3. Set up the frontend
+
+```bash
 cd frontend
 npm install
 cd ..
+```
+
+### 4. Create environment files
+
+Backend:
+
+```bash
+cp .env.example .env
+```
+
+Frontend:
+
+```bash
+cp frontend/.env.example frontend/.env
 ```
 
 ## Environment Variables
@@ -196,7 +277,6 @@ APP_API_KEY=clinical-demo-key
 CORS_ORIGINS=http://127.0.0.1:5173,http://localhost:5173
 OPEN_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
-DATABASE_PATH=backend/data/clinical_reconciliation.db
 ```
 
 Frontend `frontend/.env`:
@@ -206,67 +286,70 @@ VITE_API_BASE_URL=
 VITE_APP_API_KEY=clinical-demo-key
 ```
 
-Leave `VITE_API_BASE_URL` blank in local development so the Vite proxy handles `/api`.
+Notes:
+- Leave `VITE_API_BASE_URL` blank in local development so Vite proxies `/api`
+- Leave `OPEN_API_KEY` blank if you want to use deterministic fallback behavior for demo mode
 
-## Run Locally
+## How To Run The Program
 
-Stop any old servers first:
+If you already have something running on the same ports, stop old processes first:
 
 ```bash
 kill $(lsof -ti :8000) 2>/dev/null
 kill $(lsof -ti :5173) 2>/dev/null
 ```
 
-Backend:
+### Terminal 1: start the backend
 
 ```bash
 cd "/Users/osamahgilani/Documents/New project/clinical-data-reconciliation-engine"
 .venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Frontend:
+### Terminal 2: start the frontend
 
 ```bash
 cd "/Users/osamahgilani/Documents/New project/clinical-data-reconciliation-engine/frontend"
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Open:
-- [UI](http://127.0.0.1:5173/)
-- [Swagger](http://127.0.0.1:8000/docs)
-- [Health](http://127.0.0.1:8000/health)
+### Open in the browser
+
+- UI: [http://127.0.0.1:5173/](http://127.0.0.1:5173/)
+- API docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- Health check: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
 
 ## Recommended Demo Flow
 
-The UI opens on a seeded reviewer case designed to show both required workflows quickly.
+The app opens on a seeded reviewer case designed to show the product quickly.
 
 Suggested 30-second walkthrough:
 
-1. Run `Run Reconciliation`.
-2. Call out the selected source, confidence score, rule hits, and clinical safety status.
-3. Try `Reject Recommendation` before typing rationale to show the human-in-the-loop guard.
-4. Enter a short rationale, then approve, reject, or request manual review.
-5. Run `Validate Data Quality`.
-6. Open the blocking blood pressure issue and point out the remediation guidance.
+1. Click `Run Reconciliation`.
+2. Call out the selected source, confidence score, rule hits, and safety status.
+3. Show the AI reasoning and source ranking in the decision panel.
+4. Try `Reject Recommendation` before entering rationale to demonstrate the human-in-the-loop guard.
+5. Enter a short rationale and choose approve, reject, or manual review.
+6. Click `Validate Data Quality`.
+7. Open the high-severity blood pressure issue and point out the remediation guidance.
 
-Why this case works well in a demo:
+Why this demo case works well:
 - three sources disagree on metformin dose
 - CKD context makes the lower dose more plausible
-- the chart also contains stale metadata and missing allergy documentation
-- the reviewer can see explainability, safety, and quality validation in one pass
+- the chart includes quality defects that are easy to explain in a presentation
+- both required workflows can be demonstrated in under a minute
 
-## Frontend UX
+## What The UI Includes
 
-The UI is intentionally small and reviewer-friendly:
-
-- top summary card with seeded patient context
-- medication reconciliation section with source comparison, confidence, reasoning, and approve/reject flow
-- data quality section with score breakdown and severity chips
-- right-side decision panel showing:
-  - reasoning trace
-  - confidence factors
-  - source trust ranking
-  - clinical safety checklist
+- Premium clinician-facing review screen
+- Clinical focus panel for the primary issue
+- Patient summary with status and recent labs
+- Medication reconciliation workspace
+- Data quality validation workspace
+- AI decision inspector
+- Risk heatmap
+- Demo and intake tools
+- New patient form with medication scanner
 
 ## Reconciliation Logic
 
@@ -307,7 +390,7 @@ The OpenAI integration is used for:
 - recommended follow-up actions
 - short data quality summaries
 
-The LLM does not choose the final medication record independently.
+The LLM does not independently decide the final medication record.
 
 ### Prompt Design
 
@@ -321,7 +404,7 @@ Prompts are grounded with:
 
 Reliability controls:
 - deterministic fallback text when the provider is unavailable
-- retry/fallback behavior for transient failures
+- retry and fallback behavior for transient failures
 - in-memory cache for repeated prompts
 - concise low-creativity explanation prompts
 
@@ -341,8 +424,8 @@ npm test -- --run
 ```
 
 Current coverage includes:
-- reconciliation chooses plausible source output
-- stale or risky context influences confidence/explanation
+- reconciliation chooses a plausible source
+- stale or risky context influences confidence and explanation
 - implausible vitals are flagged
 - empty allergies are flagged
 - API authentication rejects invalid access
@@ -351,17 +434,17 @@ Current coverage includes:
 ## Product / Architecture Trade-offs
 
 - I kept the backend logic deterministic and explainable instead of making the LLM the decision-maker.
-- I used a focused single-page UI rather than a large clinical operations platform to stay aligned with the take-home scope.
-- FastAPI + React was retained because the codebase was already stable and testable in this stack.
-- A simple local database exists for development internals, but the main reviewer flow is still centered on the two required API workflows.
+- I kept the UI focused and demo-friendly instead of expanding into a large enterprise operations suite.
+- I used a pragmatic FastAPI + React stack because it was stable, testable, and easy to run locally.
+- Internal development helpers exist, but the core product story still centers on the required reconciliation and data-quality workflows.
 
 ## What I Would Improve With More Time
 
-- migrate backend internals to the exact preferred Node/TypeScript stack if required by the reviewer
-- add more scenario coverage and visual regression tests
-- improve medication normalization with a stronger drug reference dataset
-- add hosted deployment and CI screenshots for the final submission
-- add more clinician-reviewed heuristics for safety checks
+- deploy a hosted demo
+- add richer medication normalization using a stronger drug reference dataset
+- add more seeded reviewer scenarios
+- expand frontend and visual regression coverage
+- add more clinician-reviewed safety heuristics
 
 ## Estimated Time Spent
 
