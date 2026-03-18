@@ -6,6 +6,8 @@ AI-assisted medication reconciliation and chart quality review for a clinician-f
 https://youtu.be/LvKegi20h4E?si=T7rDsODaMIlw_Z9G
 
 ## 📊 Presentation:
+[Clinical-Data-Reconciliation-Engine.pdf](https://github.com/user-attachments/files/26074631/Clinical-Data-Reconciliation-Engine.pdf)
+
 
 
 This project is designed to feel like a strong internship submission:
