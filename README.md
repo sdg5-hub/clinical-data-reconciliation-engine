@@ -2,6 +2,12 @@
 
 AI-assisted medication reconciliation and chart quality review for a clinician-facing take-home assessment.
 
+## 🎥 Demo Video:
+https://youtu.be/LvKegi20h4E?si=T7rDsODaMIlw_Z9G
+
+## 📊 Presentation:
+
+
 This project is designed to feel like a strong internship submission:
 - focused scope
 - clean full-stack architecture
