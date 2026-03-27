@@ -20,39 +20,50 @@ def test_can_create_case_and_run_case_workflows():
         "/api/cases",
         headers=AUTH_HEADERS,
         json={
-            "name": "Case API Demo",
-            "risk": "medium",
-            "reconciliation_request": {
-                "patient_context": {
-                    "age": 60,
-                    "conditions": ["Hypertension"],
-                    "recent_labs": {"egfr": 72},
-                },
-                "sources": [
-                    {
-                        "system": "Hospital EHR",
-                        "medication": "Lisinopril 10mg daily",
-                        "last_updated": "2026-03-10",
-                        "source_reliability": "high",
-                    },
-                    {
-                        "system": "Retail pharmacy",
-                        "medication": "Lisinopril 5mg daily",
-                        "last_filled": "2026-03-08",
-                        "source_reliability": "medium",
-                    },
-                ],
-            },
-            "quality_request": {
-                "demographics": {"name": "Case API Demo", "dob": "1965-01-01", "gender": "M"},
-                "medications": ["Lisinopril"],
-                "allergies": ["Penicillin"],
-                "conditions": ["Hypertension"],
-                "vital_signs": {"blood_pressure": "120/80", "heart_rate": 80},
-                "last_updated": "2026-03-10",
-            },
-        },
-    )
+             {
+  "resourceType": "Patient",
+  "id": "example-01",
+  "identifier": [
+    {
+      "use": "usual",
+      "type": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "MR"
+          }
+        ]
+      },
+      "system": "urn:oid:1.2.36.146.595.217.0.1",
+      "value": "12345"
+    }
+  ],
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "family": "Doe",
+      "given": [
+        "John",
+        "D"
+      ]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1990-01-01",
+  "address": [
+    {
+      "use": "home",
+      "line": [
+        "123 Main St"
+      ],
+      "city": "New York",
+      "state": "NY",
+      "postalCode": "10001",
+      "country": "USA"
+    }
+  ]
+}
 
     assert create_response.status_code == 200
     case_id = create_response.json()["id"]
