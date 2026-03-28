@@ -14,6 +14,7 @@ type DemoControlPanelProps = {
   activeDemoId: "demo1" | "demo2" | "custom";
   scenarios: DemoScenario[];
   onLoadScenario: (scenario: DemoScenario) => void;
+  repoPatientJsonPath?: string;
   onCreateCase: (payload: {
     reconciliationRequest: ReconcileMedicationRequest;
     qualityRequest: DataQualityRequest;
@@ -25,6 +26,7 @@ export function DemoControlPanel({
   activeDemoId,
   scenarios,
   onLoadScenario,
+  repoPatientJsonPath,
   onCreateCase,
 }: DemoControlPanelProps) {
   const [showNewPatient, setShowNewPatient] = useState(false);
@@ -70,6 +72,14 @@ export function DemoControlPanel({
 
       {showNewPatient ? (
         <div className="demo-control-panel__intake">
+          {repoPatientJsonPath ? (
+            <div className="demo-control-panel__repo-hint">
+              <strong>Repo-loaded JSON</strong>
+              <p>
+                Replace the contents of <code>{repoPatientJsonPath}</code>, save, and reload the site. The app will import that patient JSON automatically.
+              </p>
+            </div>
+          ) : null}
           <NewPatientPanel onCreateCase={onCreateCase} />
         </div>
       ) : (

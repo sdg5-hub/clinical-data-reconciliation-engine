@@ -410,6 +410,19 @@ textarea:focus {
   border-radius: 14px;
 }
 
+.demo-control-panel__repo-hint {
+  margin-bottom: 14px;
+  padding: 14px;
+  background: #f8fbfe;
+  border: 1px solid rgba(27, 61, 105, 0.08);
+  border-radius: 14px;
+}
+
+.demo-control-panel__repo-hint p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+}
+
 .demo-control-panel__intake {
   margin-top: 14px;
 }
@@ -1881,7 +1894,8 @@ textarea:focus {
 .panel--new-patient .scanner-result,
 .panel--new-patient .scanner-candidate,
 .panel--new-patient .scanner-history__item,
-.panel--new-patient .demo-control-panel__hint {
+.panel--new-patient .demo-control-panel__hint,
+.demo-control-panel__repo-hint {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(124, 199, 255, 0.14) !important;
 }

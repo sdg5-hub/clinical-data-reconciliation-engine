@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CaseOverview } from "./components/CaseOverview";
 import { DataQualityPanel } from "./components/DataQualityPanel";
 import { DemoControlPanel } from "./components/DemoControlPanel";
@@ -13,6 +13,7 @@ import {
   sampleMedicationRequest,
   sampleQualityRequest,
 } from "./sampleData";
+import { importPatientJson } from "./patientJson";
 import type {
   CaseStatus,
   DataQualityRequest,
@@ -21,6 +22,8 @@ import type {
   ReconcileMedicationResponse,
   ReviewDecision,
 } from "./types";
+
+const REPO_PATIENT_JSON_PATH = "/patient-input.json";
 
 function buildStatus(
   reviewDecision: ReviewDecision,
@@ -108,6 +111,7 @@ export default function App() {
   const [reviewDecision, setReviewDecision] = useState<ReviewDecision>(null);
   const [reviewerRationale, setReviewerRationale] = useState("");
   const [activeDemoId, setActiveDemoId] = useState<"demo1" | "demo2" | "custom">("demo1");
+  const repoImportAttempted = useRef(false);
   const status = useMemo(
     () => buildStatus(reviewDecision, reconciliationResult, qualityResult),
     [qualityResult, reconciliationResult, reviewDecision],
@@ -179,6 +183,45 @@ export default function App() {
     setReviewerRationale("");
     setActiveDemoId("custom");
   }
+
+  useEffect(() => {
+    if (repoImportAttempted.current) {
+      return;
+    }
+    repoImportAttempted.current = true;
+    if (import.meta.env.MODE === "test") {
+      return;
+    }
+
+    async function loadRepoPatientJson() {
+      try {
+        const repoPatientJsonUrl = new URL(
+          `${REPO_PATIENT_JSON_PATH}?t=${Date.now()}`,
+          window.location.origin,
+        ).toString();
+        const response = await fetch(repoPatientJsonUrl);
+        if (!response.ok) {
+          return;
+        }
+
+        const rawText = (await response.text()).trim();
+        if (!rawText || rawText === "{}") {
+          return;
+        }
+
+        const imported = importPatientJson(rawText);
+        handleCreatePatientCase({
+          reconciliationRequest: imported.reconciliationRequest,
+          qualityRequest: imported.qualityRequest,
+          pendingScanEvents: [],
+        });
+      } catch (error) {
+        console.error("Could not auto-load repo patient JSON.", error);
+      }
+    }
+
+    void loadRepoPatientJson();
+  }, []);
 
   return (
     <div className="app-shell">
@@ -350,6 +393,7 @@ export default function App() {
             scenarios={scenarios}
             onLoadScenario={loadScenario}
             onCreateCase={handleCreatePatientCase}
+            repoPatientJsonPath={REPO_PATIENT_JSON_PATH}
           />
 
           <DecisionInspector
