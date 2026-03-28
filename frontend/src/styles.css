@@ -1271,6 +1271,14 @@ p {
   border-radius: 12px;
 }
 
+.success-note {
+  padding: 10px 12px;
+  color: #166534;
+  background: #ecfdf3;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 12px;
+}
+
 .clean-list {
   margin: 0;
   padding-left: 18px;
@@ -1322,6 +1330,31 @@ p {
   max-height: 360px;
   font-size: 0.82rem;
   line-height: 1.55;
+}
+
+.editor {
+  display: grid;
+  gap: 8px;
+}
+
+.editor__label {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.editor__input {
+  width: 100%;
+  min-height: 220px;
+  padding: 14px;
+  resize: vertical;
+  border-radius: 14px;
+}
+
+.patient-json-import {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .inspector-placeholder {
@@ -1823,6 +1856,22 @@ textarea:focus {
   border: 0 !important;
   box-shadow: none !important;
   padding: 0;
+}
+
+.panel--new-patient .editor__label {
+  color: #a9bfde !important;
+}
+
+.panel--new-patient .editor__input {
+  background: rgba(6, 14, 27, 0.96) !important;
+  border-color: rgba(124, 199, 255, 0.16) !important;
+  color: #e6eefc !important;
+}
+
+.panel--new-patient .success-note {
+  color: #cbffd9 !important;
+  background: rgba(74, 222, 128, 0.1) !important;
+  border-color: rgba(74, 222, 128, 0.2) !important;
 }
 
 .panel--new-patient .scanner-panel__controls {

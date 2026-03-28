@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { importPatientJson } from "../patientJson";
 import type { DataQualityRequest, ReconcileMedicationRequest, ScanHistoryItem } from "../types";
+import { JsonEditor } from "./JsonEditor";
 import { MedicationScannerPanel } from "./MedicationScannerPanel";
 
 type NewPatientPanelProps = {
@@ -50,9 +52,59 @@ function isoToday() {
 export function NewPatientPanel({ onCreateCase }: NewPatientPanelProps) {
   const [form, setForm] = useState<FormState>(initialState);
   const [pendingScanEvents, setPendingScanEvents] = useState<ScanHistoryItem[]>([]);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [jsonSuccess, setJsonSuccess] = useState<string | null>(null);
 
   function updateField<Key extends keyof FormState>(key: Key, value: FormState[Key]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function syncFormFromImportedPayload(payload: {
+    reconciliationRequest: ReconcileMedicationRequest;
+    qualityRequest: DataQualityRequest;
+  }) {
+    setForm({
+      name: payload.qualityRequest.demographics.name,
+      age: String(payload.reconciliationRequest.patient_context.age || 45),
+      dob: payload.qualityRequest.demographics.dob,
+      gender: payload.qualityRequest.demographics.gender,
+      primaryMedication:
+        payload.reconciliationRequest.sources[0]?.medication ||
+        payload.qualityRequest.medications[0] ||
+        "",
+      medications: payload.qualityRequest.medications.join(", "),
+      conditions: payload.qualityRequest.conditions.join(", "),
+      allergies: payload.qualityRequest.allergies.join(", "),
+      bloodPressure: payload.qualityRequest.vital_signs.blood_pressure || "",
+      heartRate: payload.qualityRequest.vital_signs.heart_rate ? String(payload.qualityRequest.vital_signs.heart_rate) : "",
+    });
+  }
+
+  function handleImportJson() {
+    try {
+      const imported = importPatientJson(jsonInput);
+      setJsonError(null);
+      syncFormFromImportedPayload(imported);
+      setPendingScanEvents([]);
+      onCreateCase({
+        reconciliationRequest: imported.reconciliationRequest,
+        qualityRequest: imported.qualityRequest,
+        pendingScanEvents: [],
+      });
+      setJsonSuccess(
+        [
+          `Loaded ${imported.summary.patientName} from ${imported.summary.sourceType}.`,
+          `${imported.summary.medicationCount} medications, ${imported.summary.conditionCount} conditions, ${imported.summary.allergyCount} allergies imported.`,
+          imported.summary.medicationCount === 0 ? "No medication entries were found, so the reconciliation table will stay empty until medication data is added." : null,
+        ]
+          .filter(Boolean)
+          .join(" "),
+      );
+    } catch (error) {
+      setJsonSuccess(null);
+      setJsonError(error instanceof Error ? error.message : "Unable to import the pasted JSON.");
+    }
   }
 
   function handleSubmit() {
@@ -106,6 +158,8 @@ export function NewPatientPanel({ onCreateCase }: NewPatientPanelProps) {
       },
       pendingScanEvents,
     });
+    setJsonError(null);
+    setJsonSuccess("Manual patient fields loaded into the review workspace.");
   }
 
   function handleScannedMedication(payload: { inferredMedication: string; scanEvent?: ScanHistoryItem }) {
@@ -132,7 +186,37 @@ export function NewPatientPanel({ onCreateCase }: NewPatientPanelProps) {
         <div>
           <p className="eyebrow">Add New Patient</p>
           <h2>Create a fresh review case</h2>
+          <p className="workspace-card__copy">
+            Paste patient JSON to auto-populate the case, or use the manual fields and scanner below.
+          </p>
         </div>
+      </div>
+      <div className="workspace-card workspace-card--muted patient-json-import">
+        <div className="workspace-card__header">
+          <div>
+            <p className="eyebrow">Paste Patient JSON</p>
+            <h3>FHIR bundle, single resource, or patient object</h3>
+            <p className="workspace-card__copy">
+              The importer recognizes common patient JSON shapes and updates demographics, medications, conditions, allergies, vitals, and labs when present.
+            </p>
+          </div>
+        </div>
+        <JsonEditor
+          label="Patient JSON"
+          value={jsonInput}
+          onChange={(value) => {
+            setJsonInput(value);
+            setJsonError(null);
+            setJsonSuccess(null);
+          }}
+        />
+        <div className="button-row">
+          <button className="button" type="button" onClick={handleImportJson}>
+            Import Pasted JSON
+          </button>
+        </div>
+        {jsonError ? <p className="error">{jsonError}</p> : null}
+        {jsonSuccess ? <p className="success-note">{jsonSuccess}</p> : null}
       </div>
       <div className="intake-grid">
         <label className="intake-field">
