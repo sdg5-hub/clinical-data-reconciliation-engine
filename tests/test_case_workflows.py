@@ -20,50 +20,46 @@ def test_can_create_case_and_run_case_workflows():
         "/api/cases",
         headers=AUTH_HEADERS,
         json={
-             {
-  "resourceType": "Patient",
-  "id": "example-01",
-  "identifier": [
-    {
-      "use": "usual",
-      "type": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-            "code": "MR"
-          }
-        ]
-      },
-      "system": "urn:oid:1.2.36.146.595.217.0.1",
-      "value": "12345"
-    }
-  ],
-  "active": true,
-  "name": [
-    {
-      "use": "official",
-      "family": "Doe",
-      "given": [
-        "John",
-        "D"
-      ]
-    }
-  ],
-  "gender": "male",
-  "birthDate": "1990-01-01",
-  "address": [
-    {
-      "use": "home",
-      "line": [
-        "123 Main St"
-      ],
-      "city": "New York",
-      "state": "NY",
-      "postalCode": "10001",
-      "country": "USA"
-    }
-  ]
-}
+            "name": "Workflow Test Patient",
+            "risk": "medium",
+            "reconciliation_request": {
+                "patient_context": {
+                    "age": 36,
+                    "conditions": ["Hypertension"],
+                    "recent_labs": {"creatinine": 1.1},
+                },
+                "sources": [
+                    {
+                        "system": "Primary care",
+                        "medication": "Lisinopril 10mg daily",
+                        "last_updated": "2026-03-12",
+                        "source_reliability": "high",
+                    },
+                    {
+                        "system": "Retail pharmacy",
+                        "medication": "Lisinopril 20mg daily",
+                        "last_filled": "2026-03-10",
+                        "source_reliability": "medium",
+                    },
+                ],
+            },
+            "quality_request": {
+                "demographics": {
+                    "name": "Workflow Test Patient",
+                    "dob": "1990-01-01",
+                    "gender": "M",
+                },
+                "medications": ["Lisinopril"],
+                "allergies": ["Penicillin"],
+                "conditions": ["Hypertension"],
+                "vital_signs": {
+                    "blood_pressure": "132/84",
+                    "heart_rate": 76,
+                },
+                "last_updated": "2026-03-12",
+            },
+        },
+    )
 
     assert create_response.status_code == 200
     case_id = create_response.json()["id"]
