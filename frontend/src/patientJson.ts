@@ -60,7 +60,7 @@ function calculateAgeFromDob(dob: string | null) {
     return 45;
   }
 
-  const birthDate = new Date(dob);
+  const birthDate = parseDateString(dob);
   if (Number.isNaN(birthDate.getTime())) {
     return 45;
   }
@@ -72,6 +72,34 @@ function calculateAgeFromDob(dob: string | null) {
     age -= 1;
   }
   return Math.max(age, 0);
+}
+
+function parseDateString(value: string) {
+  const directDate = new Date(value);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
+  }
+
+  const slashMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    const [, month, day, year] = slashMatch;
+    return new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`);
+  }
+
+  return new Date(Number.NaN);
+}
+
+function normalizeIsoDate(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = parseDateString(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString().slice(0, 10);
 }
 
 function pickHumanName(value: unknown): string | null {
@@ -384,6 +412,41 @@ function firstNonEmptyList(...lists: string[][]): string[] {
   return [];
 }
 
+function readNamedString(source: ResourceLike | null, keys: string[]) {
+  if (!source) {
+    return null;
+  }
+
+  for (const key of keys) {
+    const value = readString(source[key]);
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function readNamedNumber(source: ResourceLike | null, keys: string[]) {
+  if (!source) {
+    return null;
+  }
+
+  for (const key of keys) {
+    const numericValue = readNumber(source[key]);
+    if (numericValue !== null) {
+      return numericValue;
+    }
+
+    const stringValue = readString(source[key]);
+    if (stringValue && !Number.isNaN(Number(stringValue))) {
+      return Number(stringValue);
+    }
+  }
+
+  return null;
+}
+
 function buildRequestsFromGenericObject(input: ResourceLike): ImportedPatientPayload {
   const demographics = isRecord(input.demographics) ? input.demographics : null;
   const patient = isRecord(input.patient) ? input.patient : null;
@@ -416,26 +479,33 @@ function buildRequestsFromGenericObject(input: ResourceLike): ImportedPatientPay
   );
   const conditions = firstNonEmptyList(readStringList(input.conditions), readStringList(patient?.conditions));
   const allergies = firstNonEmptyList(readStringList(input.allergies), readStringList(patient?.allergies));
+  const firstName = readNamedString(input, ["Patient_First_Name", "first_name", "First_Name"]);
+  const lastName = readNamedString(input, ["Patient_Last_Name", "last_name", "Last_Name"]);
+  const combinedExportName = [firstName, lastName].filter(Boolean).join(" ");
+  const rawDob =
+    readNamedString(demographics, ["dob", "birthDate", "Birth_Date"]) ||
+    readNamedString(patient, ["birthDate", "dob", "Birth_Date"]) ||
+    readNamedString(input, ["birthDate", "dob", "Birth_Date", "birth_date"]);
 
   const name =
     readString(demographics?.name) ||
     readString(patient?.name) ||
     readString(input.name) ||
+    combinedExportName ||
     "Imported patient";
   const dob =
-    readString(demographics?.dob) ||
-    readString(patient?.birthDate) ||
-    readString(input.birthDate) ||
-    readString(input.dob) ||
+    normalizeIsoDate(rawDob) ||
     isoToday();
   const gender =
     normalizeGender(
-      readString(demographics?.gender) || readString(patient?.gender) || readString(input.gender),
+      readNamedString(demographics, ["gender", "Gender"]) ||
+        readNamedString(patient, ["gender", "Gender"]) ||
+        readNamedString(input, ["gender", "Gender", "sex", "Sex"]),
     );
   const age =
-    readNumber(input.age) ||
-    readNumber(patient?.age) ||
-    calculateAgeFromDob(readString(demographics?.dob) || readString(input.birthDate) || readString(input.dob));
+    readNamedNumber(input, ["age", "Age"]) ||
+    readNamedNumber(patient, ["age", "Age"]) ||
+    calculateAgeFromDob(dob);
   const recentLabs = isRecord(input.recent_labs)
     ? input.recent_labs
     : isRecord(input.recentLabs)
