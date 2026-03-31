@@ -72,6 +72,18 @@ const medicationCatalog: MedicationCatalogEntry[] = [
     aliases: ["albuterol", "albuterol inhaler", "ventolin"],
     codes: ["00378587593", "378587593"],
   },
+  {
+    canonical: "Pyridoxine HCL 50mg tablet",
+    aliases: [
+      "pyridoxine",
+      "pyridoxine hcl",
+      "pyridoxine hydrochloride",
+      "vitamin b-6",
+      "vitamin b6",
+      "vitamin b 6",
+    ],
+    codes: ["001820086014", "1820086014"],
+  },
 ];
 
 const supportedFormats = [
@@ -104,12 +116,34 @@ function normalizeDigitCode(value: string) {
   return value.replace(/\D/g, "");
 }
 
+function normalizeScanText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[|]/g, "l")
+    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/[^a-z0-9.\-/\s]/g, " ")
+    .replace(/\bvitamin\s+b[\s-]?6\b/g, "vitamin b6")
+    .replace(/\bpyridoxine\s+hci\b/g, "pyridoxine hcl")
+    .replace(/\btab(?:let)?s?\b/g, "tablet")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function extractDose(rawValue: string) {
-  const match = rawValue.toLowerCase().match(/\b(\d+)\s?(mg|mcg|g|ml)\b/);
+  const match = normalizeScanText(rawValue).match(/\b(\d+)\s?(mg|mcg|g|ml)\b/);
   if (!match) {
     return "";
   }
   return `${match[1]}${match[2]}`;
+}
+
+function tokenSet(value: string) {
+  return new Set(
+    normalizeScanText(value)
+      .split(" ")
+      .map((part) => part.trim())
+      .filter(Boolean),
+  );
 }
 
 function confidenceBand(confidence: number): "high" | "medium" | "low" {
@@ -122,11 +156,12 @@ function confidenceBand(confidence: number): "high" | "medium" | "low" {
   return "low";
 }
 
-function rankedCandidates(rawValue: string): ScannerCandidate[] {
+export function rankedCandidates(rawValue: string): ScannerCandidate[] {
   const trimmed = rawValue.trim();
-  const lowered = trimmed.toLowerCase();
+  const normalized = normalizeScanText(trimmed);
   const digits = normalizeDigitCode(trimmed);
   const dose = extractDose(trimmed);
+  const tokens = tokenSet(trimmed);
   const candidates: ScannerCandidate[] = [];
 
   medicationCatalog.forEach((item) => {
@@ -139,20 +174,24 @@ function rankedCandidates(rawValue: string): ScannerCandidate[] {
       return;
     }
 
-    const aliasMatch = item.aliases.find((alias) => lowered.includes(alias));
+    const aliasMatch = item.aliases.find((alias) => normalized.includes(normalizeScanText(alias)));
     if (!aliasMatch) {
       return;
     }
 
     const candidateDose = extractDose(item.canonical);
-    const doseBoost = dose && candidateDose && dose === candidateDose ? 0.08 : 0;
-    const confidence = Math.min(0.95, (dose ? 0.82 : 0.72) + doseBoost);
+    const candidateTokens = tokenSet(item.canonical);
+    const tokenOverlap = [...candidateTokens].filter((token) => tokens.has(token)).length;
+    const tokenBoost = Math.min(0.08, tokenOverlap * 0.02);
+    const formBoost = tokens.has("tablet") && candidateTokens.has("tablet") ? 0.03 : 0;
+    const doseBoost = dose && candidateDose && dose === candidateDose ? 0.1 : 0;
+    const confidence = Math.min(0.97, (dose ? 0.82 : 0.72) + doseBoost + tokenBoost + formBoost);
     candidates.push({
       label: item.canonical,
       confidence,
       reason: doseBoost
-        ? `Matched label text "${aliasMatch}" and extracted dose ${dose}.`
-        : `Matched label text using alias "${aliasMatch}".`,
+        ? `Matched OCR label text "${aliasMatch}", extracted dose ${dose}, and aligned supporting label tokens.`
+        : `Matched label text using alias "${aliasMatch}" and supporting label tokens.`,
     });
   });
 
